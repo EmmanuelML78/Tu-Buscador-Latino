@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-center items-center h-96">
+  <div class="flex flex-col justify-center items-center min-h-96">
     <div class="mt-2 max-w-lg w-full bg-white rounded-lg shadow-md p-6">
       <form @submit="handleSearch" class="flex">
         <input
@@ -14,6 +14,23 @@
         </button>
       </form>
     </div>
+
+    <div v-if="searchResults.length > 0" class="mt-4">
+      <h2 class="text-xl font-bold text-center text-white">
+        Resultados de búsqueda:
+      </h2>
+      <ul class="mt-2">
+        <li
+          v-for="result in searchResults"
+          :key="result.pageid"
+          class="mb-4 bg-white p-4 rounded-lg shadow-md">
+          <h3 class="text-lg font-semibold text-black">
+            {{ result.title }}
+          </h3>
+          <p v-html="result.snippet"></p>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
@@ -26,6 +43,7 @@ export default {
   data() {
     return {
       searchWord: "",
+      searchResults: [],
     };
   },
   methods: {
@@ -49,9 +67,11 @@ export default {
         });
 
         this.searchWord = "";
+
+        this.searchResults = response.data;
       } catch (error) {
         console.error(error);
-        toast.error("Algo salio mal", {
+        toast.error("Algo salió mal", {
           position: "bottom-right",
         });
       }

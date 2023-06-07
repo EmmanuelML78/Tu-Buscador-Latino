@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from .models import Consulta
 from .serializers import ConsultaSerializer
 from django.utils import timezone
+import requests
+from bs4 import BeautifulSoup
 
 class ConsultaView(APIView):
     def post(self, request):
@@ -26,7 +28,30 @@ class ConsultaView(APIView):
                 palabra_buscada=palabra_buscada,
             )
 
-        return Response({'message': 'Consulta registrada correctamente.'})
+        url = f"https://es.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch={palabra_buscada}"
+        response = requests.get(url)
+        data = response.json()
+
+        # Obtener los resultados de la API
+        results = data['query']['search']
+
+        filtered_results = []
+        for result in results:
+            pageid = result['pageid']
+            title = result['title']
+            snippet_html = result['snippet']
+
+            # Eliminar etiquetas HTML 
+            soup = BeautifulSoup(snippet_html, 'html.parser')
+            snippet_text = soup.get_text()
+
+            filtered_results.append({
+                'pageid': pageid,
+                'title': title,
+                'snippet': snippet_text,
+            })
+
+        return Response(filtered_results)
 
 class ConsultaListView(ListAPIView):
     queryset = Consulta.objects.all()
